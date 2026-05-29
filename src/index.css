@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3b82f6; /* Blue 500 */
+  --color-primary-dark: #2563eb;
+  --color-background: #f8fafc; /* Slate 50 */
+  --color-surface: #ffffff;
+  --color-text: #0f172a; /* Slate 900 */
+  --color-text-muted: #64748b; /* Slate 500 */
+  
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Touch targets for mobile */
+button {
+  touch-action: manipulation;
+}

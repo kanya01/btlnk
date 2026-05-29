@@ -1,0 +1,75 @@
+import { useGameStore } from '../store';
+
+export const HistoryChart = () => {
+  const history = useGameStore((state) => state.history);
+  const sessionId = useGameStore((state) => state.sessionId);
+
+  // Focus only on the current session for the default view
+  const sessionRuns = history.filter(h => h.sessionId === sessionId);
+  
+  if (sessionRuns.length < 2) {
+    return (
+      <div className="h-32 flex items-center justify-center text-slate-400 text-sm">
+        Complete more runs to see your pattern.
+      </div>
+    );
+  }
+
+  // Sort by deliveryMode to see the curve
+  const sortedRuns = [...sessionRuns].sort((a, b) => a.deliveryMode - b.deliveryMode);
+
+  const maxSpan = Math.max(...sortedRuns.map(r => r.span), 5); // At least 5 for scale
+  
+  // SVG Dimensions
+  const width = 300;
+  const height = 120;
+  const paddingX = 20;
+  const paddingY = 20;
+
+  const points = sortedRuns.map((run) => {
+    // Map delivery mode (0 to 1) to X coordinate
+    // Actually, maybe better to just space them evenly, or use deliveryMode strictly
+    // Using deliveryMode strictly
+    const x = paddingX + (run.deliveryMode * (width - 2 * paddingX));
+    const y = height - paddingY - ((run.span / maxSpan) * (height - 2 * paddingY));
+    return `${x},${y}`;
+  });
+
+  return (
+    <div className="w-full max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+      <h3 className="text-sm font-bold text-slate-700 mb-4">Your Session Pattern</h3>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
+        {/* Axes */}
+        <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#e2e8f0" strokeWidth="2" />
+        
+        {/* Line */}
+        <polyline
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="3"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          points={points.join(' ')}
+        />
+        
+        {/* Points */}
+        {sortedRuns.map((run) => {
+          const x = paddingX + (run.deliveryMode * (width - 2 * paddingX));
+          const y = height - paddingY - ((run.span / maxSpan) * (height - 2 * paddingY));
+          return (
+            <g key={run.id}>
+              <circle cx={x} cy={y} r="4" className="fill-white stroke-primary stroke-2" />
+              <text x={x} y={y - 10} textAnchor="middle" className="text-[10px] fill-slate-500 font-medium">
+                {run.span}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="flex justify-between mt-2 text-[10px] text-slate-400">
+        <span>All at once</span>
+        <span>Bit by bit</span>
+      </div>
+    </div>
+  );
+};
