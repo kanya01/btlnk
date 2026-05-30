@@ -48,7 +48,7 @@ export const RecallStage = () => {
         </p>
       </div>
 
-      {/* Input Display Area */}
+      {/* Input Display Area – content container, no glass */}
       <div className="flex gap-2 p-4 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[100px] w-full justify-center items-center overflow-x-auto mb-8">
         {input.length === 0 ? (
           <span className="text-slate-300 dark:text-slate-500">Tap tokens below to build the sequence</span>
@@ -71,12 +71,12 @@ export const RecallStage = () => {
         )}
       </div>
 
-      {/* Actions */}
+      {/* Actions – these are actionable, so they get liquid glass */}
       <div className="flex justify-between w-full mb-8">
         <button
           onClick={removeLastInput}
           disabled={input.length === 0}
-          className="flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="liquid-glass flex items-center gap-2 px-6 py-3 rounded-2xl font-medium text-slate-600 dark:text-slate-300"
         >
           <Delete className="w-5 h-5" />
           Delete
@@ -85,14 +85,14 @@ export const RecallStage = () => {
         <button
           onClick={submitRecall}
           disabled={input.length !== sequence.length}
-          className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl font-medium hover:bg-primary-dark disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/25"
+          className="liquid-glass-primary flex items-center gap-2 px-8 py-3 rounded-2xl font-medium text-white"
         >
           <Check className="w-5 h-5" />
           Submit
         </button>
       </div>
 
-      {/* Token Keyboard */}
+      {/* Token Keyboard – content container, no glass */}
       <div className="grid grid-cols-4 gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full">
         {palette.map((t, i) => (
           <div key={i} className="flex justify-center">

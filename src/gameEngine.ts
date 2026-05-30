@@ -13,8 +13,9 @@ const COLORS: Color[] = ['red', 'blue', 'green', 'yellow'];
 /**
  * Generates a random sequence of tokens of length `n`.
  * Ensures no two adjacent tokens are identical in both shape and color.
+ * If `easyMode` is true, only circles are used.
  */
-export function generateSequence(n: number): Token[] {
+export function generateSequence(n: number, easyMode: boolean = false): Token[] {
   const sequence: Token[] = [];
   
   for (let i = 0; i < n; i++) {
@@ -23,7 +24,7 @@ export function generateSequence(n: number): Token[] {
     
     // Simple rejection sampling to avoid adjacent duplicates
     do {
-      nextShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
+      nextShape = easyMode ? 'circle' : SHAPES[Math.floor(Math.random() * SHAPES.length)];
       nextColor = COLORS[Math.floor(Math.random() * COLORS.length)];
     } while (
       i > 0 && 

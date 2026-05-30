@@ -5,6 +5,14 @@ import type { Token } from '../gameEngine';
 import { TokenView } from './TokenView';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Maps a token's color to the glow hue used by the pulsing background effect.
+const TOKEN_GLOW: Record<Token['color'], string> = {
+  red: '#ef4444',
+  blue: '#3b82f6',
+  green: '#22c55e',
+  yellow: '#eab308',
+};
+
 export const PresentationStage = () => {
   const sequence = useGameStore((state) => state.sequence);
   const deliveryMode = useGameStore((state) => state.deliveryMode);
@@ -14,6 +22,9 @@ export const PresentationStage = () => {
 
   const [activeTokens, setActiveTokens] = useState<Token[]>([]);
   const [isFinished, setIsFinished] = useState(false);
+  // The glow keeps the last shown token's hue so it stays steady through the
+  // brief gaps between chunks instead of blinking on/off (which looked choppy).
+  const [glowColor, setGlowColor] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -26,7 +37,9 @@ export const PresentationStage = () => {
       if (!mounted) return;
 
       while (currentChunk < schedule.chunks.length) {
-        setActiveTokens(schedule.chunks[currentChunk]);
+        const chunk = schedule.chunks[currentChunk];
+        setActiveTokens(chunk);
+        if (chunk[0]) setGlowColor(TOKEN_GLOW[chunk[0].color]);
         await new Promise(r => setTimeout(r, schedule.exposureMs));
         if (!mounted) return;
 
@@ -66,41 +79,37 @@ export const PresentationStage = () => {
       </div>
 
       <div className="relative h-32 w-full flex items-center justify-center gap-4">
-        {/* Background hue focus effect */}
+        {/* Ambient hue: a soft, slow glow behind the tokens that picks up the
+            current token's color. Kept deliberately subtle so it reads as background.
+            It sits behind the tokens (z-10) but in front of the page background.
+            NOTE: must NOT use a negative z-index or `fixed` here — a negative z-index
+            renders it underneath the opaque page background, and `fixed` gets trapped by
+            framer-motion's transformed ancestor. Both made the effect invisible. */}
         <AnimatePresence>
-          {darkMode && activeTokens.length > 0 && (
+          {glowColor && !isFinished && (
             <motion.div
-              // This transition controls how fast the entire background fades in/out when tokens appear/disappear
-              // duration: 0.3 means it takes 0.3 seconds to show up or hide
+              // One steady layer for the whole presentation; the inner div just
+              // breathes opacity. Fades gently in at the start and out at the end.
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              // Gentle pulse, low max so it stays in the background and isn't distracting.
+              // Light mode goes a touch lighter since `multiply` reads stronger on white.
+              animate={{ opacity: darkMode ? [0.1, 0.28, 0.1] : [0.06, 0.16, 0.06] }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.1 }}
-              className="fixed inset-0 pointer-events-none z-[-1]"
-            >
-              <motion.div
-                className="absolute inset-0 mix-blend-screen"
-                // opacity array [min, max, min] controls the pulsing intensity
-                // 0 means fully invisible, 1 means fully visible. 
-                // Changing to [0.1, 0.9, 0.1] would make the pulse more extreme
-                animate={{ opacity: [0.3, 0.9, 0.3] }}
-                // duration: 3 means one full pulse cycle (0.3 -> 0.6 -> 0.3) takes 3 seconds
-                // Lower duration (e.g., 1) = faster pulsing. Higher duration = slower pulsing.
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                style={{
-                  background: activeTokens.length > 0
-                    // radial-gradient variables:
-                    // 'transparent 25%' means the center 25% is completely clear (where the token sits)
-                    // '150%' at the end controls how far out the color stretches (higher = wider spread)
-                    ? `radial-gradient(circle at center, transparent 25%, ${activeTokens[0].color === 'red' ? '#ef4444' :
-                      activeTokens[0].color === 'blue' ? '#3b82f6' :
-                        activeTokens[0].color === 'green' ? '#22c55e' :
-                          '#eab308'
-                    } 150%)`
-                    : 'transparent'
-                }}
-              />
-            </motion.div>
+              transition={{
+                opacity: { duration: 4.5, repeat: Infinity, ease: "easeInOut" },
+              }}
+              // Large soft layer centered on the token row.
+              // On dark backgrounds `screen` lightens into a glow; on light backgrounds
+              // `multiply` lays down a soft tint (screen would be invisible on white).
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] h-[120vh] pointer-events-none z-0 ${
+                darkMode ? 'mix-blend-screen' : 'mix-blend-multiply'
+              }`}
+              style={{
+                // Color at the center (around the tokens) fading out by ~50% of the
+                // radius. Raise the 50% to spread wider, lower it to tighten the glow.
+                background: `radial-gradient(circle at center, ${glowColor} 0%, transparent 50%)`,
+              }}
+            />
           )}
         </AnimatePresence>
 

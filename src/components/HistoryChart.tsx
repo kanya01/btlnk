@@ -15,10 +15,26 @@ export const HistoryChart = () => {
     );
   }
 
-  // Sort by deliveryMode to see the curve
-  const sortedRuns = [...sessionRuns].sort((a, b) => a.deliveryMode - b.deliveryMode);
+  // Group by deliveryMode and take the max span to avoid a jumbled chart
+  const aggregatedMap = new Map();
+  sessionRuns.forEach(run => {
+    const existing = aggregatedMap.get(run.deliveryMode);
+    if (!existing || run.span > existing.span) {
+      aggregatedMap.set(run.deliveryMode, run);
+    }
+  });
 
-  const maxSpan = Math.max(...sortedRuns.map(r => r.span), 5); // At least 5 for scale
+  const sortedRuns = Array.from(aggregatedMap.values()).sort((a: any, b: any) => a.deliveryMode - b.deliveryMode);
+
+  if (sortedRuns.length < 2) {
+    return (
+      <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 h-32 flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm text-center">
+        Try different delivery modes to see your pattern emerge.
+      </div>
+    );
+  }
+
+  const maxSpan = Math.max(...sortedRuns.map((r: any) => r.span), 5); // At least 5 for scale
   
   // SVG Dimensions
   const width = 300;
@@ -45,7 +61,7 @@ export const HistoryChart = () => {
         {/* Line */}
         <polyline
           fill="none"
-          stroke="#3b82f6"
+          stroke="#d4775c"
           strokeWidth="3"
           strokeLinejoin="round"
           strokeLinecap="round"

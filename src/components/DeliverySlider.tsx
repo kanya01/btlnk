@@ -21,10 +21,10 @@ export const DeliverySlider = () => {
           type="range" 
           min="0" 
           max="1" 
-          step="0.1"
+          step="0.01"
           value={deliveryMode}
           onChange={(e) => setDeliveryMode(parseFloat(e.target.value))}
-          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+          className="liquid-slider"
           aria-label="Delivery Mode Slider"
         />
         <div className="flex justify-between text-[10px] text-slate-300 dark:text-slate-600 mt-2 px-1">

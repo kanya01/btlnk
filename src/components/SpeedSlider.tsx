@@ -22,10 +22,10 @@ export const SpeedSlider = () => {
           type="range" 
           min="0.5" 
           max="2.0" 
-          step="0.25"
+          step="0.01"
           value={speed}
           onChange={(e) => setSpeed(parseFloat(e.target.value))}
-          className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-primary"
+          className="liquid-slider"
           aria-label="Speed Slider"
         />
         <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500 mt-2 px-1">

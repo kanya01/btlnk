@@ -27,11 +27,14 @@ interface GameState {
   soundEnabled: boolean;
   speed: number;
   darkMode: boolean;
+  easyMode: boolean;
+  lastResult: boolean | null;
 
   setDeliveryMode: (mode: number) => void;
   setSpeed: (speed: number) => void;
   toggleSound: () => void;
   toggleDarkMode: () => void;
+  toggleEasyMode: () => void;
   startGame: () => void;
   startRound: () => void;
   addInputToken: (token: Omit<Token, 'id'>) => void;
@@ -56,6 +59,8 @@ export const useGameStore = create<GameState>()(
       soundEnabled: false,
       speed: 1.0,
       darkMode: false,
+      easyMode: false,
+      lastResult: null,
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
       setSpeed: (speed) => set({ speed }),
@@ -69,6 +74,7 @@ export const useGameStore = create<GameState>()(
         }
         return { darkMode: newDarkMode };
       }),
+      toggleEasyMode: () => set((state) => ({ easyMode: !state.easyMode })),
 
       startGame: () => {
         set({ phase: 'presentation', round: 3, bestSpan: 0 });
@@ -76,8 +82,8 @@ export const useGameStore = create<GameState>()(
       },
 
       startRound: () => {
-        const { round } = get();
-        const newSequence = generateSequence(round);
+        const { round, easyMode } = get();
+        const newSequence = generateSequence(round, easyMode);
         set({
           phase: 'presentation',
           sequence: newSequence,
@@ -111,7 +117,7 @@ export const useGameStore = create<GameState>()(
 
         if (isCorrect) {
           if (soundEnabled) playSound('correct');
-          set({ phase: 'result', bestSpan: Math.max(bestSpan, round) });
+          set({ phase: 'result', bestSpan: Math.max(bestSpan, round), lastResult: true });
           
           set({ round: round + 1 });
           setTimeout(() => {
@@ -119,7 +125,7 @@ export const useGameStore = create<GameState>()(
           }, 1000);
         } else {
           if (soundEnabled) playSound('wrong');
-          const currentSpan = Math.max(0, round - 1);
+          const currentSpan = round > 3 ? round - 1 : 0;
           const newRecord: RunRecord = {
             id: `run-${Date.now()}`,
             sessionId,
@@ -132,7 +138,8 @@ export const useGameStore = create<GameState>()(
           set({
             phase: 'result',
             bestSpan: Math.max(bestSpan, currentSpan),
-            history: [...history, newRecord]
+            history: [...history, newRecord],
+            lastResult: false
           });
 
           setTimeout(() => {
@@ -152,7 +159,8 @@ export const useGameStore = create<GameState>()(
         history: state.history,
         sessionId: state.sessionId,
         soundEnabled: state.soundEnabled,
-        darkMode: state.darkMode
+        darkMode: state.darkMode,
+        easyMode: state.easyMode
       }),
     }
   )
