@@ -2,8 +2,8 @@ import { useGameStore } from '../store';
 import { motion, useReducedMotion } from 'framer-motion';
 
 // Shared easing curve – a slow, organic ease
-const smooth = { duration: 0.6, ease: [0.4, 0, 0.1, 1] };
-const smoothSlow = { duration: 0.8, ease: [0.4, 0, 0.1, 1] };
+const smooth = { duration: 0.6, ease: [0.4, 0, 0.1, 1] as const };
+const smoothSlow = { duration: 0.8, ease: [0.4, 0, 0.1, 1] as const };
 
 export const LightbulbToggle = () => {
   const { darkMode, toggleDarkMode } = useGameStore();
@@ -119,7 +119,7 @@ export const LightbulbToggle = () => {
               }}
               transition={{
                 duration: prefersReduced ? 0 : 0.5,
-                ease: [0.4, 0, 0.1, 1],
+                ease: [0.4, 0, 0.1, 1] as const,
                 delay: isOn ? 0.1 + i * 0.06 : 0,
                 opacity: {
                   duration: prefersReduced ? 0 : 0.4,
