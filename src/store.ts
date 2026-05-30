@@ -12,6 +12,7 @@ export interface RunRecord {
   timestamp: number;
   span: number;
   deliveryMode: number;
+  speed: number;
 }
 
 interface GameState {
@@ -24,9 +25,13 @@ interface GameState {
   bestSpan: number;
   history: RunRecord[];
   soundEnabled: boolean;
+  speed: number;
+  darkMode: boolean;
 
   setDeliveryMode: (mode: number) => void;
+  setSpeed: (speed: number) => void;
   toggleSound: () => void;
+  toggleDarkMode: () => void;
   startGame: () => void;
   startRound: () => void;
   addInputToken: (token: Omit<Token, 'id'>) => void;
@@ -49,9 +54,21 @@ export const useGameStore = create<GameState>()(
       bestSpan: 0,
       history: [],
       soundEnabled: false,
+      speed: 1.0,
+      darkMode: false,
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
+      setSpeed: (speed) => set({ speed }),
       toggleSound: () => set((state) => ({ soundEnabled: !state.soundEnabled })),
+      toggleDarkMode: () => set((state) => {
+        const newDarkMode = !state.darkMode;
+        if (newDarkMode) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        return { darkMode: newDarkMode };
+      }),
 
       startGame: () => {
         set({ phase: 'presentation', round: 3, bestSpan: 0 });
@@ -89,7 +106,7 @@ export const useGameStore = create<GameState>()(
       },
 
       submitRecall: () => {
-        const { sequence, input, round, bestSpan, sessionId, deliveryMode, history, soundEnabled } = get();
+        const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled } = get();
         const isCorrect = validateRecall(sequence, input);
 
         if (isCorrect) {
@@ -109,11 +126,12 @@ export const useGameStore = create<GameState>()(
             timestamp: Date.now(),
             span: currentSpan,
             deliveryMode,
+            speed,
           };
 
           set({
             phase: 'result',
-            bestSpan: currentSpan,
+            bestSpan: Math.max(bestSpan, currentSpan),
             history: [...history, newRecord]
           });
 
@@ -133,7 +151,8 @@ export const useGameStore = create<GameState>()(
       partialize: (state) => ({ 
         history: state.history,
         sessionId: state.sessionId,
-        soundEnabled: state.soundEnabled
+        soundEnabled: state.soundEnabled,
+        darkMode: state.darkMode
       }),
     }
   )

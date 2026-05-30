@@ -20,6 +20,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.dark {
+  --color-slate-950: #1D1A05;
+  --color-slate-900: #1D1A05;
+  --color-slate-800: #2a2608;
+  --color-slate-700: #3d370c;
+  --color-slate-600: #574e12;
+  --color-slate-500: #8a7c29;
+  --color-slate-400: #b5a43b;
+  --color-slate-300: #d6c65c;
+  --color-slate-200: #e8db82;
+  --color-slate-100: #fffbbd;
+  --color-white: #fffbbd;
+}
+
 * {
   box-sizing: border-box;
 }

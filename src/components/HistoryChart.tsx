@@ -9,7 +9,7 @@ export const HistoryChart = () => {
   
   if (sessionRuns.length < 2) {
     return (
-      <div className="h-32 flex items-center justify-center text-slate-400 text-sm">
+      <div className="h-32 flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
         Complete more runs to see your pattern.
       </div>
     );
@@ -36,11 +36,11 @@ export const HistoryChart = () => {
   });
 
   return (
-    <div className="w-full max-w-md mx-auto bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-      <h3 className="text-sm font-bold text-slate-700 mb-4">Your Session Pattern</h3>
+    <div className="w-full max-w-md mx-auto bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
+      <h3 className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-4">Your Session Pattern</h3>
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto overflow-visible">
         {/* Axes */}
-        <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#e2e8f0" strokeWidth="2" />
+        <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} className="stroke-slate-200 dark:stroke-slate-700" strokeWidth="2" />
         
         {/* Line */}
         <polyline
@@ -58,15 +58,15 @@ export const HistoryChart = () => {
           const y = height - paddingY - ((run.span / maxSpan) * (height - 2 * paddingY));
           return (
             <g key={run.id}>
-              <circle cx={x} cy={y} r="4" className="fill-white stroke-primary stroke-2" />
-              <text x={x} y={y - 10} textAnchor="middle" className="text-[10px] fill-slate-500 font-medium">
+              <circle cx={x} cy={y} r="4" className="fill-white dark:fill-slate-800 stroke-primary stroke-2" />
+              <text x={x} y={y - 10} textAnchor="middle" className="text-[10px] fill-slate-500 dark:fill-slate-400 font-medium">
                 {run.span}
               </text>
             </g>
           );
         })}
       </svg>
-      <div className="flex justify-between mt-2 text-[10px] text-slate-400">
+      <div className="flex justify-between mt-2 text-[10px] text-slate-400 dark:text-slate-500">
         <span>All at once</span>
         <span>Bit by bit</span>
       </div>

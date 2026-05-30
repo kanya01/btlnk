@@ -56,10 +56,10 @@ export interface ChunkSchedule {
  * - Mode 1 (Bit by bit): N chunks of size 1, visible for 3000ms / N each.
  * - Mode 0.5 (Chunked): ~N/2 chunks.
  */
-export function getDeliverySchedule(sequence: Token[], deliveryMode: number): ChunkSchedule {
+export function getDeliverySchedule(sequence: Token[], deliveryMode: number, speed: number = 1.0): ChunkSchedule {
   const n = sequence.length;
-  // Constant total exposure time, scale with N a bit so it's not impossible at high N
-  const totalTimeMs = Math.max(3000, n * 1000); 
+  // Constant total exposure time, scale with N a bit so it's not impossible at high N, adjust by speed
+  const totalTimeMs = Math.max(3000, n * 1000) / speed; 
 
   // Determine chunk size based on delivery mode
   // mode 0 => chunk size = n

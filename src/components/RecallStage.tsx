@@ -42,16 +42,16 @@ export const RecallStage = () => {
   return (
     <div className="flex flex-col items-center h-full max-w-2xl mx-auto py-8">
       <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold text-slate-900">Reproduce the sequence</h2>
-        <p className="text-slate-500">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Reproduce the sequence</h2>
+        <p className="text-slate-500 dark:text-slate-400">
           {input.length} / {sequence.length} items entered
         </p>
       </div>
 
       {/* Input Display Area */}
-      <div className="flex gap-2 p-4 bg-white rounded-3xl shadow-sm border border-slate-100 min-h-[100px] w-full justify-center items-center overflow-x-auto mb-8">
+      <div className="flex gap-2 p-4 bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 min-h-[100px] w-full justify-center items-center overflow-x-auto mb-8">
         {input.length === 0 ? (
-          <span className="text-slate-300">Tap tokens below to build the sequence</span>
+          <span className="text-slate-300 dark:text-slate-500">Tap tokens below to build the sequence</span>
         ) : (
           input.map((t, i) => (
             <motion.div
@@ -67,7 +67,7 @@ export const RecallStage = () => {
         
         {/* Placeholder for next input */}
         {input.length < sequence.length && (
-          <div className="w-10 h-10 border-2 border-dashed border-slate-200 rounded-xl animate-pulse" />
+          <div className="w-10 h-10 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-xl animate-pulse" />
         )}
       </div>
 
@@ -76,7 +76,7 @@ export const RecallStage = () => {
         <button
           onClick={removeLastInput}
           disabled={input.length === 0}
-          className="flex items-center gap-2 px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-medium hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-2xl font-medium hover:bg-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Delete className="w-5 h-5" />
           Delete
@@ -93,7 +93,7 @@ export const RecallStage = () => {
       </div>
 
       {/* Token Keyboard */}
-      <div className="grid grid-cols-4 gap-4 bg-white p-6 rounded-3xl shadow-sm border border-slate-100 w-full">
+      <div className="grid grid-cols-4 gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full">
         {palette.map((t, i) => (
           <div key={i} className="flex justify-center">
              <TokenView 
