@@ -56,6 +56,7 @@ export const PresentationStage = () => {
       // Wait a moment then auto-advance to recall
       setTimeout(() => {
         if (mounted) {
+          useGameStore.getState().markPresentationEnd();
           useGameStore.setState({ phase: 'recall' });
         }
       }, 300);

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Token } from "./gameEngine";
-import { generateSequence, validateRecall } from './gameEngine';
+import { generateSequence, validateRecall, calculateSynapseXP } from './gameEngine';
 import { playSound } from './audio';
 
 export type GamePhase = 'intro' | 'presentation' | 'recall' | 'result' | 'summary';
@@ -13,6 +13,9 @@ export interface RunRecord {
   span: number;
   deliveryMode: number;
   speed: number;
+  avgReactionTime?: number;
+  avgHesitation?: number;
+  score?: number;
 }
 
 interface GameState {
@@ -29,6 +32,9 @@ interface GameState {
   darkMode: boolean;
   easyMode: boolean;
   lastResult: boolean | null;
+  presentationEndTime: number | null;
+  inputTimestamps: number[];
+  runMetrics: { reactionTimes: number[]; hesitations: number[] };
 
   setDeliveryMode: (mode: number) => void;
   setSpeed: (speed: number) => void;
@@ -37,6 +43,7 @@ interface GameState {
   toggleEasyMode: () => void;
   startGame: () => void;
   startRound: () => void;
+  markPresentationEnd: () => void;
   addInputToken: (token: Omit<Token, 'id'>) => void;
   removeLastInput: () => void;
   clearInput: () => void;
@@ -61,6 +68,9 @@ export const useGameStore = create<GameState>()(
       darkMode: false,
       easyMode: false,
       lastResult: null,
+      presentationEndTime: null,
+      inputTimestamps: [],
+      runMetrics: { reactionTimes: [], hesitations: [] },
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
       setSpeed: (speed) => set({ speed }),
@@ -77,7 +87,7 @@ export const useGameStore = create<GameState>()(
       toggleEasyMode: () => set((state) => ({ easyMode: !state.easyMode })),
 
       startGame: () => {
-        set({ phase: 'presentation', round: 3, bestSpan: 0 });
+        set({ phase: 'presentation', round: 3, bestSpan: 0, runMetrics: { reactionTimes: [], hesitations: [] } });
         get().startRound();
       },
 
@@ -88,36 +98,66 @@ export const useGameStore = create<GameState>()(
           phase: 'presentation',
           sequence: newSequence,
           input: [],
+          presentationEndTime: null,
+          inputTimestamps: [],
         });
       },
 
+      markPresentationEnd: () => {
+        set({ presentationEndTime: Date.now() });
+      },
+
       addInputToken: (tokenData) => {
-        const { input, sequence, soundEnabled } = get();
+        const { input, sequence, soundEnabled, inputTimestamps } = get();
         if (input.length >= sequence.length) return;
         
         if (soundEnabled) playSound('tap');
 
         set({
           input: [...input, { ...tokenData, id: `input-${input.length}-${Date.now()}` }],
+          inputTimestamps: [...inputTimestamps, Date.now()],
         });
       },
 
       removeLastInput: () => {
-        const { input } = get();
-        set({ input: input.slice(0, -1) });
+        const { input, inputTimestamps } = get();
+        set({ 
+          input: input.slice(0, -1),
+          inputTimestamps: inputTimestamps.slice(0, -1)
+        });
       },
 
       clearInput: () => {
-        set({ input: [] });
+        set({ input: [], inputTimestamps: [] });
       },
 
       submitRecall: () => {
-        const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled } = get();
+        const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled, presentationEndTime, inputTimestamps, runMetrics } = get();
         const isCorrect = validateRecall(sequence, input);
+
+        let roundReactionTime: number | undefined;
+        let roundHesitations: number[] = [];
+
+        if (presentationEndTime && inputTimestamps.length > 0) {
+          roundReactionTime = inputTimestamps[0] - presentationEndTime;
+          for (let i = 1; i < inputTimestamps.length; i++) {
+            roundHesitations.push(inputTimestamps[i] - inputTimestamps[i - 1]);
+          }
+        }
+
+        const newRunMetrics = {
+          reactionTimes: roundReactionTime !== undefined ? [...runMetrics.reactionTimes, roundReactionTime] : runMetrics.reactionTimes,
+          hesitations: [...runMetrics.hesitations, ...roundHesitations]
+        };
 
         if (isCorrect) {
           if (soundEnabled) playSound('correct');
-          set({ phase: 'result', bestSpan: Math.max(bestSpan, round), lastResult: true });
+          set({ 
+            phase: 'result', 
+            bestSpan: Math.max(bestSpan, round), 
+            lastResult: true,
+            runMetrics: newRunMetrics
+          });
           
           set({ round: round + 1 });
           setTimeout(() => {
@@ -126,6 +166,26 @@ export const useGameStore = create<GameState>()(
         } else {
           if (soundEnabled) playSound('wrong');
           const currentSpan = round > 3 ? round - 1 : 0;
+          
+          let avgReactionTime = 0;
+          if (newRunMetrics.reactionTimes.length > 0) {
+            avgReactionTime = newRunMetrics.reactionTimes.reduce((a, b) => a + b, 0) / newRunMetrics.reactionTimes.length;
+          }
+
+          let avgHesitation = 0;
+          if (newRunMetrics.hesitations.length > 0) {
+            avgHesitation = newRunMetrics.hesitations.reduce((a, b) => a + b, 0) / newRunMetrics.hesitations.length;
+          }
+
+          const score = calculateSynapseXP(
+            currentSpan,
+            speed,
+            get().easyMode,
+            deliveryMode,
+            avgReactionTime,
+            avgHesitation
+          );
+
           const newRecord: RunRecord = {
             id: `run-${Date.now()}`,
             sessionId,
@@ -133,13 +193,17 @@ export const useGameStore = create<GameState>()(
             span: currentSpan,
             deliveryMode,
             speed,
+            avgReactionTime,
+            avgHesitation,
+            score
           };
 
           set({
             phase: 'result',
             bestSpan: Math.max(bestSpan, currentSpan),
             history: [...history, newRecord],
-            lastResult: false
+            lastResult: false,
+            runMetrics: newRunMetrics
           });
 
           setTimeout(() => {
@@ -148,9 +212,10 @@ export const useGameStore = create<GameState>()(
         }
       },
 
+
       goToSummary: () => set({ phase: 'summary' }),
       
-      resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [] })
+      resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [], runMetrics: { reactionTimes: [], hesitations: [] } })
     }),
     {
       name: 'bottleneck-storage',

@@ -1,5 +1,5 @@
 import { useGameStore } from './store';
-import { Brain, Play, RotateCcw, Volume2, VolumeX, Check, Palette } from 'lucide-react';
+import { Brain, Play, RotateCcw, Volume2, VolumeX, Check, Palette, HelpCircle } from 'lucide-react';
 import { LightbulbToggle } from './components/LightbulbToggle';
 import { PresentationStage } from './components/PresentationStage';
 import { RecallStage } from './components/RecallStage';
@@ -50,6 +50,21 @@ const IntroStage = () => {
               <span><strong className="text-slate-700 dark:text-slate-300">Progress</strong> — get it right and the next round adds one more item.</span>
             </div>
           </div>
+        </div>
+      </motion.div>
+
+      {/* Recall Quotient */}
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.22, duration: 0.4 }}
+        className="w-full max-w-md mb-6"
+      >
+        <div className="bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm p-5 rounded-2xl border border-slate-100 dark:border-slate-700/50">
+          <h2 className="text-sm font-semibold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-2">Recall Quotient (RQ)</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            This measures your brain's "RAM" — how much information you can juggle in your mind at once. You get a much higher score for remembering more items, recalling them quickly, and playing on harder settings.
+          </p>
         </div>
       </motion.div>
 
@@ -182,6 +197,33 @@ const SummaryStage = () => {
   
   const currentRun = history.filter(h => h.sessionId === sessionId).pop();
   const currentSpan = currentRun ? currentRun.span : 0;
+  const score = currentRun?.score || 0;
+
+  let emoji = currentSpan < 3 ? "😭" : "🎉";
+  let message = currentSpan < 3 ? "Lock in, don't go out like that" : "Good job👌🏿";
+
+  if (currentRun && currentRun.avgReactionTime !== undefined) {
+    const rTime = currentRun.avgReactionTime;
+    const hes = currentRun.avgHesitation || 0;
+    
+    const isFast = rTime < 1500 && hes < 800;
+    const isSlow = rTime > 2500 || hes > 1200;
+    const isAccurate = currentSpan >= 4;
+
+    if (isAccurate && isSlow) {
+      emoji = "🧘🏿";
+      message = "Methodical and accurate. You found your cognitive limit!";
+    } else if (isAccurate && isFast) {
+      emoji = "⚡";
+      message = "Lightning fast and razor sharp. Incredible run!";
+    } else if (!isAccurate && isFast) {
+      emoji = "🏃🏿💨";
+      message = "You rushed it! Take your time to process the sequence.";
+    } else if (!isAccurate && isSlow) {
+      emoji = "🐌";
+      message = "Hesitated and still missed. Let's focus on the patterns.";
+    }
+  }
 
   return (
     <motion.div 
@@ -191,15 +233,36 @@ const SummaryStage = () => {
     >
       <div className="space-y-2 mt-8">
         <span className="text-4xl mb-4 block">
-          {currentSpan < 2 ? "😭" : "🎉"}
+          {emoji}
         </span>
         <h2 className="text-2xl font-medium text-slate-800 dark:text-slate-200 px-4">
-          {currentSpan < 2 ? "Lock in, don't go out like that" : "Good job👌🏿"}
+          {message}
         </h2>
         <div className="py-4">
           <span className="text-7xl font-bold text-primary mb-2 block">{currentSpan}</span>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Items remembered</p>
         </div>
+
+        {score > 0 && (
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", bounce: 0.5, delay: 0.2 }}
+            className="bg-primary/10 dark:bg-primary/20 text-primary px-6 py-3 rounded-2xl inline-block mb-4"
+          >
+            <span className="text-2xl font-bold block">+{score.toLocaleString()}</span>
+            <div className="flex items-center justify-center gap-1 opacity-80 mt-1">
+              <span className="text-xs font-semibold uppercase tracking-wider">Recall Quotient (RQ)</span>
+              <div className="group relative flex items-center justify-center cursor-help">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <div className="absolute bottom-full mb-2 hidden group-hover:block w-48 p-2.5 bg-slate-800 text-white text-[11px] rounded-lg shadow-xl z-10 font-normal normal-case tracking-normal text-left pointer-events-none">
+                  This measures how much information your brain can juggle at once. You score higher for remembering more items, doing it quickly, and using harder settings.
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {bestSpan > currentSpan && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Your all-time best is {bestSpan}</p>
         )}

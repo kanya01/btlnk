@@ -101,3 +101,46 @@ export function validateRecall(expected: Token[], actual: Token[]): boolean {
   
   return true;
 }
+
+/**
+ * Calculates Synapse XP based on various run parameters.
+ * - span: sequence length correctly recalled
+ * - speed: presentation speed (0.5 to 2.0)
+ * - easyMode: true if simplified complexity
+ * - deliveryMode: chunking factor (0.0 = all at once, 1.0 = bit by bit)
+ * - avgReactionTime: average reaction time in ms
+ * - avgHesitation: average hesitation time between tokens in ms
+ */
+export function calculateSynapseXP(
+  span: number,
+  speed: number,
+  easyMode: boolean,
+  deliveryMode: number,
+  avgReactionTime: number,
+  avgHesitation: number
+): number {
+  if (span < 1) return 0;
+
+  // Exponential base points: goes up meaningfully with more sequence steps
+  const basePoints = 100 * Math.pow(1.4, span);
+
+  // Multipliers for settings
+  const speedMultiplier = speed; // e.g. 2.0 speed = 2x XP
+  const complexityMultiplier = easyMode ? 0.8 : 1.5; // Bonus for complex mode
+  
+  // Delivery mode: 0 (all at once, relies on visual chunking) gets up to 1.4x bonus
+  const chunkingMultiplier = 1.0 + (1.0 - deliveryMode) * 0.4; 
+
+  // Performance Multiplier: rewards fast and fluid recall
+  const safeRt = Math.max(200, avgReactionTime || 2000);
+  const safeHes = Math.max(100, avgHesitation || 1000);
+
+  // Normalize around standard values: 1500ms reaction, 800ms hesitation
+  const rtFactor = Math.min(2.0, 1500 / safeRt);
+  const hesFactor = Math.min(2.0, 800 / safeHes);
+  const performanceMultiplier = (rtFactor + hesFactor) / 2;
+
+  return Math.round(
+    basePoints * speedMultiplier * complexityMultiplier * chunkingMultiplier * performanceMultiplier
+  );
+}
