@@ -93,16 +93,15 @@ export const RecallStage = () => {
       </div>
 
       {/* Token Keyboard – content container, no glass */}
-      <div className="grid grid-cols-4 gap-4 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full">
+      <div className="flex flex-wrap justify-center gap-3 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700 w-full">
         {palette.map((t, i) => (
-          <div key={i} className="flex justify-center">
-             <TokenView 
-               token={t} 
-               size="md" 
-               interactive 
-               onClick={() => addInputToken(t)} 
-             />
-          </div>
+           <TokenView 
+             key={i}
+             token={t} 
+             size="md" 
+             interactive 
+             onClick={() => addInputToken(t)} 
+           />
         ))}
       </div>
     </div>

@@ -23,7 +23,7 @@ const IntroStage = () => {
         <Brain className="w-14 h-14 mx-auto mb-5 text-primary" />
         <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-3">Bottleneck</h1>
         <p className="text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-          Test your working memory. You'll see a sequence of coloured shapes — remember them, then recall the exact order. Each correct round adds one more item.
+          Test your working memory. You'll see a sequence of coloured shapes — remember them, then recall the exact order. Each correct round adds one more item. If you miss, you'll get a second chance with text instead of shapes!
         </p>
       </div>
 
@@ -48,6 +48,10 @@ const IntroStage = () => {
             <div className="flex gap-3 items-start">
               <span className="text-base mt-0.5 shrink-0">📈</span>
               <span><strong className="text-slate-700 dark:text-slate-300">Progress</strong> — get it right and the next round adds one more item.</span>
+            </div>
+            <div className="flex gap-3 items-start">
+              <span className="text-base mt-0.5 shrink-0">🔄</span>
+              <span><strong className="text-slate-700 dark:text-slate-300">Second Chance</strong> — if you slip up, you'll get a retry using a different modality (like text instead of shapes) to see how your brain adapts!</span>
             </div>
           </div>
         </div>
@@ -169,6 +173,8 @@ const IntroStage = () => {
 
 const ResultStage = () => {
   const lastResult = useGameStore((state) => state.lastResult);
+  const secondaryModeActive = useGameStore((state) => state.secondaryModeActive);
+  const secondaryLives = useGameStore((state) => state.secondaryLives);
   
   return (
     <motion.div 
@@ -186,6 +192,16 @@ const ResultStage = () => {
       ) : (
         <div className="flex flex-col items-center justify-center text-center">
           <h2 className="text-6xl font-bold text-slate-900 dark:text-white mb-4">nope!</h2>
+          {secondaryModeActive && secondaryLives > 0 && (
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="text-xl text-primary font-medium mt-4"
+            >
+              Second Chance! Switching modality...
+            </motion.p>
+          )}
         </div>
       )}
     </motion.div>
@@ -195,12 +211,15 @@ const ResultStage = () => {
 const SummaryStage = () => {
   const { bestSpan, resetToStart, startGame, history, sessionId } = useGameStore();
   
-  const currentRun = history.filter(h => h.sessionId === sessionId).pop();
+  const currentSessionRuns = history.filter(h => h.sessionId === sessionId);
+  const currentRun = currentSessionRuns.length > 0 ? currentSessionRuns[currentSessionRuns.length - 1] : undefined;
+  const previousRun = currentSessionRuns.length > 1 ? currentSessionRuns[currentSessionRuns.length - 2] : undefined;
   const currentSpan = currentRun ? currentRun.span : 0;
   const score = currentRun?.score || 0;
 
   let emoji = currentSpan < 3 ? "😭" : "🎉";
   let message = currentSpan < 3 ? "Lock in, don't go out like that" : "Good job👌🏿";
+  let dataFeedback = "";
 
   if (currentRun && currentRun.avgReactionTime !== undefined) {
     const rTime = currentRun.avgReactionTime;
@@ -223,13 +242,43 @@ const SummaryStage = () => {
       emoji = "🐌";
       message = "Hesitated and still missed. Let's focus on the patterns.";
     }
+
+    if (currentSessionRuns.length >= 3) {
+      const recentFails = currentSessionRuns.slice(-3).every(run => run.span < 3);
+      if (recentFails) {
+        emoji = "🌱";
+        message = "There's no single 'right' way. Take your time, experiment with different settings, and find what works for you. Think about how you think!";
+      }
+    }
+  }
+
+  if (previousRun && currentRun) {
+    if (previousRun.deliveryMode !== currentRun.deliveryMode) {
+      const prevMode = previousRun.deliveryMode > 0.5 ? "Bit by bit" : "All at once";
+      const currMode = currentRun.deliveryMode > 0.5 ? "Bit by bit" : "All at once";
+      
+      if (prevMode !== currMode) {
+        const spanDiff = currentRun.span - previousRun.span;
+        if (spanDiff > 0) {
+          const improvement = Math.round((spanDiff / Math.max(1, previousRun.span)) * 100);
+          dataFeedback = `Switching your strategy from '${prevMode}' to '${currMode}' expanded your memory span by ${spanDiff} items—a massive ${improvement}% boost in retention!`;
+        } else if (spanDiff < 0) {
+          dataFeedback = `Switching to '${currMode}' dropped your span by ${Math.abs(spanDiff)} items. Maybe '${prevMode}' works better for your brain!`;
+        }
+      }
+    } else if (previousRun.speed !== currentRun.speed) {
+      const spanDiff = currentRun.span - previousRun.span;
+      if (spanDiff > 0) {
+        dataFeedback = `Changing your speed helped you remember ${spanDiff} more items!`;
+      }
+    }
   }
 
   return (
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center h-full space-y-8 max-w-md mx-auto text-center px-4"
+      className="flex flex-col items-center justify-center h-full space-y-8 max-w-md mx-auto text-center px-4 overflow-y-auto py-8 scrollbar-hide"
     >
       <div className="space-y-2 mt-8">
         <span className="text-4xl mb-4 block">
@@ -238,6 +287,17 @@ const SummaryStage = () => {
         <h2 className="text-2xl font-medium text-slate-800 dark:text-slate-200 px-4">
           {message}
         </h2>
+        {dataFeedback && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mt-4 px-4 py-3 bg-primary/10 dark:bg-primary/20 rounded-2xl border border-primary/20"
+          >
+            <p className="text-sm font-medium text-primary leading-relaxed">
+              💡 {dataFeedback}
+            </p>
+          </motion.div>
+        )}
         <div className="py-4">
           <span className="text-7xl font-bold text-primary mb-2 block">{currentSpan}</span>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Items remembered</p>

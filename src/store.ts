@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Token } from "./gameEngine";
+import type { Token, Modality } from "./gameEngine";
 import { generateSequence, validateRecall, calculateSynapseXP } from './gameEngine';
 import { playSound } from './audio';
 
@@ -16,6 +16,7 @@ export interface RunRecord {
   avgReactionTime?: number;
   avgHesitation?: number;
   score?: number;
+  modality?: Modality;
 }
 
 interface GameState {
@@ -35,6 +36,9 @@ interface GameState {
   presentationEndTime: number | null;
   inputTimestamps: number[];
   runMetrics: { reactionTimes: number[]; hesitations: number[] };
+  modality: Modality;
+  secondaryModeActive: boolean;
+  secondaryLives: number;
 
   setDeliveryMode: (mode: number) => void;
   setSpeed: (speed: number) => void;
@@ -71,6 +75,9 @@ export const useGameStore = create<GameState>()(
       presentationEndTime: null,
       inputTimestamps: [],
       runMetrics: { reactionTimes: [], hesitations: [] },
+      modality: 'shapes',
+      secondaryModeActive: false,
+      secondaryLives: 0,
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
       setSpeed: (speed) => set({ speed }),
@@ -87,7 +94,7 @@ export const useGameStore = create<GameState>()(
       toggleEasyMode: () => set((state) => ({ easyMode: !state.easyMode })),
 
       startGame: () => {
-        set({ phase: 'presentation', round: 3, bestSpan: 0, runMetrics: { reactionTimes: [], hesitations: [] } });
+        set({ phase: 'presentation', round: 3, bestSpan: 0, runMetrics: { reactionTimes: [], hesitations: [] }, modality: 'shapes', secondaryModeActive: false, secondaryLives: 0 });
         get().startRound();
       },
 
@@ -132,7 +139,7 @@ export const useGameStore = create<GameState>()(
       },
 
       submitRecall: () => {
-        const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled, presentationEndTime, inputTimestamps, runMetrics } = get();
+        const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled, presentationEndTime, inputTimestamps, runMetrics, modality, secondaryModeActive, secondaryLives } = get();
         const isCorrect = validateRecall(sequence, input);
 
         let roundReactionTime: number | undefined;
@@ -195,27 +202,77 @@ export const useGameStore = create<GameState>()(
             speed,
             avgReactionTime,
             avgHesitation,
-            score
+            score,
+            modality
           };
 
-          set({
-            phase: 'result',
-            bestSpan: Math.max(bestSpan, currentSpan),
-            history: [...history, newRecord],
-            lastResult: false,
-            runMetrics: newRunMetrics
-          });
+          // Fire-and-forget telemetry push
+          fetch('/api/telemetry', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              span: currentSpan,
+              deliveryMode,
+              speed,
+              easyMode: get().easyMode,
+              avgReactionTime,
+              avgHesitation,
+              score,
+              modality
+            })
+          }).catch(err => console.error("Telemetry error:", err));
 
-          setTimeout(() => {
-            get().goToSummary();
-          }, 1500);
+          if (!secondaryModeActive) {
+            // Switch modality for a second chance
+            set({
+              phase: 'result',
+              bestSpan: Math.max(bestSpan, currentSpan),
+              history: [...history, newRecord],
+              lastResult: false,
+              runMetrics: newRunMetrics,
+              modality: modality === 'shapes' ? 'text' : 'shapes',
+              secondaryModeActive: true,
+              secondaryLives: 2,
+              round: 3
+            });
+
+            setTimeout(() => {
+              get().startRound();
+            }, 2000);
+          } else if (secondaryLives > 1) {
+            // Try again in secondary modality
+            set({
+              phase: 'result',
+              history: [...history, newRecord],
+              lastResult: false,
+              runMetrics: newRunMetrics,
+              secondaryLives: secondaryLives - 1
+            });
+
+            setTimeout(() => {
+              get().startRound();
+            }, 2000);
+          } else {
+            // Final failure
+            set({
+              phase: 'result',
+              bestSpan: Math.max(bestSpan, currentSpan),
+              history: [...history, newRecord],
+              lastResult: false,
+              runMetrics: newRunMetrics
+            });
+
+            setTimeout(() => {
+              get().goToSummary();
+            }, 1500);
+          }
         }
       },
 
 
       goToSummary: () => set({ phase: 'summary' }),
       
-      resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [], runMetrics: { reactionTimes: [], hesitations: [] } })
+      resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [], runMetrics: { reactionTimes: [], hesitations: [] }, modality: 'shapes', secondaryModeActive: false, secondaryLives: 0 })
     }),
     {
       name: 'bottleneck-storage',

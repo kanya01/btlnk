@@ -15,7 +15,7 @@ The current difficulty progression is a strict linear `N+1` approach. We can exp
 
 ## Personalized Takeaway
 The "Aha!" moment of the application relies on the summary screen. Currently, it is generic.
-- **Data-Driven Feedback:** Construct a summary that explicitly highlights the player's delta. *"Your span increased by 3 items when you switched from 'All at once' to 'Bit by bit'. This is a 40% improvement."*
+- **Data-Driven Feedback:** Generate a dynamic summary that quantifies the player's cognitive improvement. *Example: "Switching your strategy from 'All at once' to 'Bit by bit' expanded your memory span by 3 items—a massive 40% boost in retention!"*
 - **Visual Proof:** Integrate a mini-chart specifically showing their own performance comparison across the slider spectrum.
 
 ## Visual Distractors

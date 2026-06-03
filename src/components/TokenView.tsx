@@ -1,5 +1,6 @@
 import type { Shape, Color, Token } from '../gameEngine';
 import { motion } from 'framer-motion';
+import { useGameStore } from '../store';
 
 interface TokenViewProps {
   token: Pick<Token, 'shape' | 'color'>;
@@ -21,6 +22,19 @@ const sizeMap = {
   sm: 'w-10 h-10',
   md: 'w-16 h-16',
   lg: 'w-24 h-24',
+};
+
+const textModalitySizeMap = {
+  sm: 'w-auto h-10 px-3 text-xs',
+  md: 'w-auto h-16 px-4 text-sm',
+  lg: 'w-auto h-24 px-6 text-xl',
+};
+
+const textColorMap: Record<Color, string> = {
+  red: 'text-red-500 dark:text-red-400',
+  blue: 'text-blue-500 dark:text-blue-400',
+  green: 'text-green-500 dark:text-green-400',
+  yellow: 'text-yellow-600 dark:text-yellow-400',
 };
 
 const ShapeSVG = ({ shape, className }: { shape: Shape; className: string }) => {
@@ -60,11 +74,18 @@ export const TokenView: React.FC<TokenViewProps> = ({
   className = '',
   selected = false
 }) => {
-  const baseClasses = `relative flex items-center justify-center transition-all duration-200 ${sizeMap[size]}`;
+  const modality = useGameStore((state) => state.modality);
+  const isText = modality === 'text';
+
+  const baseClasses = `relative flex items-center justify-center transition-all duration-200 rounded-xl ${
+    isText ? textModalitySizeMap[size] : sizeMap[size]
+  }`;
+  
   const interactiveClasses = interactive 
-    ? 'cursor-pointer hover:scale-105 active:scale-95' 
-    : '';
-  const selectedClasses = selected ? 'ring-4 ring-primary ring-offset-2 rounded-xl' : '';
+    ? 'cursor-pointer hover:scale-105 active:scale-95 bg-white/50 dark:bg-slate-800/50 hover:bg-white dark:hover:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700' 
+    : isText ? 'bg-white/80 dark:bg-slate-800/80 shadow-sm border border-slate-100 dark:border-slate-700' : '';
+    
+  const selectedClasses = selected ? 'ring-4 ring-primary ring-offset-2' : '';
 
   return (
     <motion.button
@@ -76,7 +97,13 @@ export const TokenView: React.FC<TokenViewProps> = ({
       aria-label={`${token.color} ${token.shape}`}
       title={`${token.color} ${token.shape}`}
     >
-      <ShapeSVG shape={token.shape} className={`w-full h-full drop-shadow-sm ${colorMap[token.color]}`} />
+      {isText ? (
+        <span className={`font-bold uppercase tracking-wider whitespace-nowrap ${textColorMap[token.color]}`}>
+          {token.color} {token.shape}
+        </span>
+      ) : (
+        <ShapeSVG shape={token.shape} className={`w-full h-full drop-shadow-sm ${colorMap[token.color]}`} />
+      )}
     </motion.button>
   );
 };

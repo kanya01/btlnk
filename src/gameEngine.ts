@@ -1,5 +1,6 @@
 export type Shape = 'circle' | 'square' | 'triangle' | 'star';
 export type Color = 'red' | 'blue' | 'green' | 'yellow';
+export type Modality = 'shapes' | 'text';
 
 export interface Token {
   id: string; // unique id for rendering
