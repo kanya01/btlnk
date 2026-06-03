@@ -6,6 +6,7 @@ import { RecallStage } from './components/RecallStage';
 import { DeliverySlider } from './components/DeliverySlider';
 import { SpeedSlider } from './components/SpeedSlider';
 import { HistoryChart } from './components/HistoryChart';
+import { AboutStage } from './components/AboutStage';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const IntroStage = () => {
@@ -209,7 +210,7 @@ const ResultStage = () => {
 };
 
 const SummaryStage = () => {
-  const { bestSpan, resetToStart, startGame, history, sessionId } = useGameStore();
+  const { bestSpan, resetToStart, startGame, history, sessionId, goToAbout } = useGameStore();
   
   const currentSessionRuns = history.filter(h => h.sessionId === sessionId);
   const currentRun = currentSessionRuns.length > 0 ? currentSessionRuns[currentSessionRuns.length - 1] : undefined;
@@ -326,6 +327,19 @@ const SummaryStage = () => {
         {bestSpan > currentSpan && (
           <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Your all-time best is {bestSpan}</p>
         )}
+
+        <div className="pt-2 pb-2">
+          <button
+            onClick={goToAbout}
+            className="group flex items-center justify-center gap-2 mx-auto text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-all duration-300 ease-out bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm px-5 py-2.5 rounded-full border border-slate-200/50 dark:border-slate-700/50 shadow-sm"
+          >
+            <span className="relative flex h-2.5 w-2.5 mr-0.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/40 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary/60"></span>
+            </span>
+            What does this actually mean?
+          </button>
+        </div>
       </div>
 
       <div className="w-full space-y-6 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-700">
@@ -397,6 +411,7 @@ function App() {
               {phase === 'recall' && <RecallStage />}
               {phase === 'result' && <ResultStage />}
               {phase === 'summary' && <SummaryStage />}
+              {phase === 'about' && <AboutStage />}
             </motion.div>
           </AnimatePresence>
         </div>

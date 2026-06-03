@@ -4,7 +4,7 @@ import type { Token, Modality } from "./gameEngine";
 import { generateSequence, validateRecall, calculateSynapseXP } from './gameEngine';
 import { playSound } from './audio';
 
-export type GamePhase = 'intro' | 'presentation' | 'recall' | 'result' | 'summary';
+export type GamePhase = 'intro' | 'presentation' | 'recall' | 'result' | 'summary' | 'about';
 
 export interface RunRecord {
   id: string;
@@ -53,6 +53,7 @@ interface GameState {
   clearInput: () => void;
   submitRecall: () => void;
   goToSummary: () => void;
+  goToAbout: () => void;
   resetToStart: () => void;
 }
 
@@ -271,6 +272,7 @@ export const useGameStore = create<GameState>()(
 
 
       goToSummary: () => set({ phase: 'summary' }),
+      goToAbout: () => set({ phase: 'about' }),
       
       resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [], runMetrics: { reactionTimes: [], hesitations: [] }, modality: 'shapes', secondaryModeActive: false, secondaryLives: 0 })
     }),
