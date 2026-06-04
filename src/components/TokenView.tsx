@@ -77,7 +77,7 @@ export const TokenView: React.FC<TokenViewProps> = ({
   const modality = useGameStore((state) => state.modality);
   const isText = modality === 'text';
 
-  const baseClasses = `relative flex items-center justify-center transition-all duration-200 rounded-xl ${
+  const baseClasses = `relative shrink-0 flex items-center justify-center transition-all duration-200 rounded-xl ${
     isText ? textModalitySizeMap[size] : sizeMap[size]
   }`;
   

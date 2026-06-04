@@ -70,7 +70,7 @@ export const PresentationStage = () => {
   }, [sequence, deliveryMode, speed]);
 
   return (
-    <div className="flex flex-col items-center justify-center h-full space-y-12">
+    <div className="flex flex-col items-center justify-center h-full space-y-10 px-2">
       <div className="h-8">
         {!isFinished && (
           <h2 className="text-xl font-medium text-slate-400 dark:text-slate-500 animate-pulse">
@@ -79,7 +79,7 @@ export const PresentationStage = () => {
         )}
       </div>
 
-      <div className="relative h-32 w-full flex items-center justify-center gap-4">
+      <div className="relative min-h-32 w-full flex flex-wrap items-center justify-center gap-3 sm:gap-4">
         {/* Ambient hue: a soft, slow glow behind the tokens that picks up the
             current token's color. Kept deliberately subtle so it reads as background.
             It sits behind the tokens (z-10) but in front of the page background.
