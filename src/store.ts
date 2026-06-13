@@ -4,7 +4,7 @@ import type { Token, Modality } from "./gameEngine";
 import { generateSequence, validateRecall, calculateSynapseXP } from './gameEngine';
 import { playSound } from './audio';
 
-export type GamePhase = 'intro' | 'presentation' | 'recall' | 'result' | 'summary' | 'about';
+export type GamePhase = 'intro' | 'presentation' | 'recall' | 'result' | 'summary' | 'about' | 'stats';
 
 export interface RunRecord {
   id: string;
@@ -39,6 +39,7 @@ interface GameState {
   modality: Modality;
   secondaryModeActive: boolean;
   secondaryLives: number;
+  returnPhase: GamePhase;
 
   setDeliveryMode: (mode: number) => void;
   setSpeed: (speed: number) => void;
@@ -54,6 +55,8 @@ interface GameState {
   submitRecall: () => void;
   goToSummary: () => void;
   goToAbout: () => void;
+  goToStats: () => void;
+  goBackFromAbout: () => void;
   resetToStart: () => void;
 }
 
@@ -79,6 +82,7 @@ export const useGameStore = create<GameState>()(
       modality: 'shapes',
       secondaryModeActive: false,
       secondaryLives: 0,
+      returnPhase: 'intro',
 
       setDeliveryMode: (mode) => set({ deliveryMode: mode }),
       setSpeed: (speed) => set({ speed }),
@@ -272,8 +276,13 @@ export const useGameStore = create<GameState>()(
 
 
       goToSummary: () => set({ phase: 'summary' }),
-      goToAbout: () => set({ phase: 'about' }),
-      
+      goToAbout: () => set((state) => ({
+        phase: 'about',
+        returnPhase: state.phase === 'about' ? state.returnPhase : state.phase,
+      })),
+      goToStats: () => set({ phase: 'stats' }),
+      goBackFromAbout: () => set((state) => ({ phase: state.returnPhase === 'about' ? 'intro' : state.returnPhase })),
+
       resetToStart: () => set({ phase: 'intro', round: 3, input: [], sequence: [], runMetrics: { reactionTimes: [], hesitations: [] }, modality: 'shapes', secondaryModeActive: false, secondaryLives: 0 })
     }),
     {

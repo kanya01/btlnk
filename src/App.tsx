@@ -1,5 +1,5 @@
 import { useGameStore } from './store';
-import { Brain, Play, RotateCcw, Volume2, VolumeX, Check, Palette, HelpCircle } from 'lucide-react';
+import { Brain, Play, RotateCcw, Volume2, VolumeX, Check, Palette, HelpCircle, Trophy, Zap, Timer, Hash, FlaskConical } from 'lucide-react';
 import { LightbulbToggle } from './components/LightbulbToggle';
 import { PresentationStage } from './components/PresentationStage';
 import { RecallStage } from './components/RecallStage';
@@ -7,6 +7,8 @@ import { DeliverySlider } from './components/DeliverySlider';
 import { SpeedSlider } from './components/SpeedSlider';
 import { HistoryChart } from './components/HistoryChart';
 import { AboutStage } from './components/AboutStage';
+import { NavBar } from './components/NavBar';
+import { AnimatedNumber } from './components/ScienceVisuals';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const IntroStage = () => {
@@ -17,14 +19,24 @@ const IntroStage = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col items-center h-full overflow-y-auto py-8 px-4 scrollbar-hide"
+      className="flex flex-col items-center h-full overflow-y-auto pt-8 pb-36 px-4 scrollbar-hide"
     >
       {/* Header */}
-      <div className="text-center mb-8">
-        <Brain className="w-14 h-14 mx-auto mb-5 text-primary" />
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-white mb-3">Bottleneck</h1>
+      <div className="text-center mb-10 pt-2">
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold uppercase tracking-[0.2em] mb-7"
+        >
+          <Brain className="w-3.5 h-3.5" />
+          A working-memory experiment
+        </motion.div>
+        <h1 className="font-display text-5xl sm:text-6xl text-slate-900 dark:text-white mb-4 leading-none">
+          Bottle<span className="italic text-primary">neck</span>
+        </h1>
         <p className="text-base text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
-          Test your working memory. You'll see a sequence of coloured shapes — remember them, then recall the exact order. Each correct round adds one more item. If you miss, you'll get a second chance with text instead of shapes!
+          Your brain holds about <strong className="text-slate-700 dark:text-slate-200">four chunks</strong> at once. Watch a sequence of coloured shapes, recall the exact order, and find out where your limit really sits — then meet the science behind it.
         </p>
       </div>
 
@@ -279,7 +291,7 @@ const SummaryStage = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="flex flex-col items-center justify-center h-full space-y-8 max-w-md mx-auto text-center px-4 overflow-y-auto py-8 scrollbar-hide"
+      className="flex flex-col items-center justify-center h-full space-y-8 max-w-md mx-auto text-center px-4 overflow-y-auto pt-8 pb-36 scrollbar-hide"
     >
       <div className="space-y-2 mt-8">
         <span className="text-4xl mb-4 block">
@@ -371,15 +383,113 @@ const SummaryStage = () => {
   );
 };
 
+const StatsStage = () => {
+  const { history, startGame, goToAbout } = useGameStore();
+
+  const totalRuns = history.length;
+  const bestSpan = totalRuns ? Math.max(...history.map((r) => r.span)) : 0;
+  const bestScore = totalRuns ? Math.max(...history.map((r) => r.score || 0)) : 0;
+  const reactionTimes = history.map((r) => r.avgReactionTime).filter((t): t is number => t !== undefined && t > 0);
+  const avgReaction = reactionTimes.length
+    ? reactionTimes.reduce((a, b) => a + b, 0) / reactionTimes.length / 1000
+    : 0;
+
+  const statCards = [
+    { icon: Trophy, label: 'Best span', value: <AnimatedNumber value={bestSpan} className="tabular-nums" /> },
+    { icon: Hash, label: 'Total runs', value: <AnimatedNumber value={totalRuns} className="tabular-nums" /> },
+    { icon: Zap, label: 'Best RQ', value: <AnimatedNumber value={bestScore} className="tabular-nums" /> },
+    { icon: Timer, label: 'Avg reaction', value: <AnimatedNumber value={avgReaction} decimals={1} suffix="s" className="tabular-nums" /> },
+  ];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="h-full overflow-y-auto pt-10 pb-36 px-4 scrollbar-hide"
+    >
+      <div className="max-w-md mx-auto space-y-8">
+        <header className="text-center space-y-2 pt-4">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Your lab notebook</p>
+          <h1 className="font-display text-4xl text-slate-900 dark:text-white">
+            The <span className="italic text-primary">numbers</span>
+          </h1>
+        </header>
+
+        {totalRuns === 0 ? (
+          <div className="text-center space-y-6 py-12">
+            <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+              No runs recorded yet. Play a round and your spans, scores and learning curve will land here.
+            </p>
+            <button
+              onClick={startGame}
+              className="liquid-glass-primary inline-flex items-center gap-2.5 px-9 py-4 rounded-2xl font-medium text-lg text-white"
+            >
+              <Play className="w-5 h-5" />
+              First run
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {statCards.map(({ icon: Icon, label, value }, i) => (
+                <motion.div
+                  key={label}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.07, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                  className="bg-white/70 dark:bg-slate-800/50 backdrop-blur-md p-5 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm"
+                >
+                  <Icon className="w-4.5 h-4.5 text-primary mb-3" />
+                  <div className="text-3xl font-bold text-slate-900 dark:text-white leading-none">{value}</div>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider mt-2">{label}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <HistoryChart />
+
+            <button
+              onClick={goToAbout}
+              className="w-full flex items-center justify-center gap-2.5 text-sm font-semibold text-slate-500 dark:text-slate-400 hover:text-primary dark:hover:text-primary transition-colors bg-white/50 dark:bg-slate-800/40 backdrop-blur-sm px-5 py-3.5 rounded-2xl border border-slate-200/50 dark:border-slate-700/50"
+            >
+              <FlaskConical className="w-4 h-4" />
+              What do these numbers mean?
+            </button>
+
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={startGame}
+                className="liquid-glass-primary inline-flex items-center gap-2.5 px-9 py-4 rounded-2xl font-medium text-lg text-white"
+              >
+                <Play className="w-5 h-5" />
+                Run it again
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </motion.div>
+  );
+};
+
 function App() {
   const phase = useGameStore((state) => state.phase);
   const { soundEnabled, toggleSound, darkMode, easyMode, toggleEasyMode } = useGameStore();
 
   return (
     <div className={`min-h-screen font-sans selection:bg-primary/20 overflow-hidden ${darkMode ? 'dark bg-[#0e0e0e] text-slate-100' : 'bg-[#faf8f6] text-slate-900'}`}>
-      <main className="container mx-auto h-screen p-4 sm:p-8 flex flex-col relative">
-        <header className="absolute top-4 right-4 sm:top-8 sm:right-8 z-10 flex gap-3">
-          <button 
+      {/* Ambient aurora — sits behind everything */}
+      <div className="aurora" aria-hidden>
+        <div className="aurora-blob aurora-a" />
+        <div className="aurora-blob aurora-b" />
+        <div className="aurora-blob aurora-c" />
+        <div className="grain" />
+      </div>
+
+      <main className="container mx-auto h-screen p-4 sm:p-8 flex flex-col relative z-10">
+        <header className="absolute top-4 right-4 sm:top-8 sm:right-8 z-20 flex gap-3">
+          <button
             onClick={toggleEasyMode}
             className={`liquid-glass p-3 rounded-full text-slate-600 dark:text-slate-300 ${easyMode ? 'liquid-glass-active' : ''}`}
             title={easyMode ? "Disable easy mode (color only)" : "Enable easy mode (color only)"}
@@ -387,7 +497,7 @@ function App() {
             <Palette className="w-5 h-5" />
           </button>
           <LightbulbToggle />
-          <button 
+          <button
             onClick={toggleSound}
             className="liquid-glass p-3 rounded-full text-slate-600 dark:text-slate-300"
             title={soundEnabled ? "Disable sound" : "Enable sound"}
@@ -395,15 +505,15 @@ function App() {
             {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
         </header>
-        
+
         <div className="flex-1 relative mt-16 sm:mt-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={phase}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, y: 24, scale: 0.99, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -18, scale: 0.995, filter: 'blur(8px)' }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
               className="absolute inset-0"
             >
               {phase === 'intro' && <IntroStage />}
@@ -412,9 +522,12 @@ function App() {
               {phase === 'result' && <ResultStage />}
               {phase === 'summary' && <SummaryStage />}
               {phase === 'about' && <AboutStage />}
+              {phase === 'stats' && <StatsStage />}
             </motion.div>
           </AnimatePresence>
         </div>
+
+        <NavBar />
       </main>
     </div>
   );

@@ -26,3 +26,5 @@ dist-ssr
 .env
 .gitignore
 .env*
+.claude/launch.json
+
