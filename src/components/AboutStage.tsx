@@ -201,7 +201,7 @@ export const AboutStage = () => {
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[17px]">
                 The likely mechanism is mundane: trainees get better at the specific routines being drilled, not a
                 bigger general-purpose workspace. <strong className="text-slate-800 dark:text-slate-200">You get
-                better at the game — you don't get a bigger brain.</strong>
+                  better at the game — you don't get a bigger brain.</strong>
               </p>
             </motion.section>
 
@@ -277,15 +277,21 @@ export const AboutStage = () => {
                   <OffloadAnim />
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3">Offload it</h3>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[15px]">
-                    Your brain is for having ideas, not storing them. Write things down immediately and spend the
-                    freed capacity on actual thinking.
+                    Your brain is for having ideas, not storing them. Risko and Gilbert&nbsp;(2016) call this{' '}
+                    <em>cognitive offloading</em> — using external tools like notes, lists and diagrams to bypass
+                    internal storage limits. Write things down immediately and spend the freed capacity on actual
+                    thinking.
                   </p>
                 </div>
                 <div className="bg-white/60 dark:bg-slate-800/40 backdrop-blur-md p-7 rounded-3xl border border-slate-100 dark:border-slate-700/50 shadow-sm">
                   <ChunkingAnim />
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3">Chunk it</h3>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[15px]">
-                    Four slots is the rule — but a chunk can be as rich as you make it. Group ten items into three
+                    Miller&nbsp;(1956) famously set the limit at seven, plus or minus two; Cowan&nbsp;(2001) revised
+                    it down to about four. Either way the slots are scarce — but a chunk can be as rich as you make
+                    it. Chase and Simon&nbsp;(1973) showed that chess masters recall entire board configurations as
+                    single chunks, and Ericsson, Chase and Faloon&nbsp;(1980) demonstrated that even digit span can
+                    be stretched from seven to over eighty through deliberate chunking practice. Group items into
                     meaningful clusters and the bottleneck never notices.
                   </p>
                 </div>
@@ -293,7 +299,9 @@ export const AboutStage = () => {
                   <FocusAnim />
                   <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-3">Defend it</h3>
                   <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-[15px]">
-                    Task-switching flushes the workspace, and reloading it costs real time and energy. Protect
+                    Every task switch carries a measurable cost (Monsell,&nbsp;2003) — and what Leroy&nbsp;(2009)
+                    calls <em>attention residue</em> means part of your workspace stays stuck on the previous task
+                    even after you've moved on. The result: less capacity for the work in front of you. Protect
                     uninterrupted blocks for anything cognitively heavy.
                   </p>
                 </div>
@@ -317,8 +325,9 @@ export const AboutStage = () => {
               <p className="text-[11px] text-slate-400 dark:text-slate-500 leading-relaxed max-w-md mx-auto">
                 Drawn from an M4003 mixed-methods study: thematic analysis of ten segmenting papers (2018–2026) and
                 statistical analysis of the Aksayli, Sala &amp; Gobet (2019) Cogmed meta-analytic dataset. Key
-                sources: Cowan (2001) · Miller (1956) · Sweller et al. (2019) · Mayer (2021) · Rey et al. (2019) ·
-                Simons et al. (2016).
+                sources: Miller (1956) · Chase &amp; Simon (1973) · Ericsson, Chase &amp; Faloon (1980) · Cowan (2001) ·
+                Monsell (2003) · Leroy (2009) · Risko &amp; Gilbert (2016) · Sweller et al. (2019) · Mayer (2021) ·
+                Rey et al. (2019) · Simons et al. (2016).
               </p>
             </motion.section>
           </div>
