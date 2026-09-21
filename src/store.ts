@@ -66,6 +66,7 @@ export const useGameStore = create<GameState>()(
       const replayCurrentSequence = () => {
         set({
           phase: 'presentation',
+          round: get().sequence.length,
           input: [],
           presentationEndTime: null,
           inputTimestamps: [],
@@ -156,6 +157,7 @@ export const useGameStore = create<GameState>()(
         submitRecall: () => {
           const { sequence, input, round, bestSpan, sessionId, deliveryMode, speed, history, soundEnabled, presentationEndTime, inputTimestamps, runMetrics, modality, secondaryModeActive, secondaryLives } = get();
           const isCorrect = validateRecall(sequence, input);
+          const currentRoundLength = sequence.length || round;
 
           let roundReactionTime: number | undefined;
           const roundHesitations: number[] = [];
@@ -176,18 +178,18 @@ export const useGameStore = create<GameState>()(
             if (soundEnabled) playSound('correct');
             set({ 
               phase: 'result', 
-              bestSpan: Math.max(bestSpan, round), 
+              bestSpan: Math.max(bestSpan, currentRoundLength), 
               lastResult: true,
               runMetrics: newRunMetrics
             });
             
-            set({ round: round + 1 });
+            set({ round: currentRoundLength + 1 });
             setTimeout(() => {
               get().startRound();
             }, 1000);
           } else {
             if (soundEnabled) playSound('wrong');
-            const currentSpan = round > 3 ? round - 1 : 0;
+            const currentSpan = currentRoundLength > 3 ? currentRoundLength - 1 : 0;
             
             let avgReactionTime = 0;
             if (newRunMetrics.reactionTimes.length > 0) {
@@ -247,7 +249,8 @@ export const useGameStore = create<GameState>()(
                 runMetrics: newRunMetrics,
                 modality: modality === 'shapes' ? 'text' : 'shapes',
                 secondaryModeActive: true,
-                secondaryLives: 2
+                secondaryLives: 2,
+                round: currentRoundLength
               });
   
               setTimeout(() => {
