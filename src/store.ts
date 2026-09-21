@@ -237,12 +237,16 @@ export const useGameStore = create<GameState>()(
               runMetrics: newRunMetrics,
               modality: modality === 'shapes' ? 'text' : 'shapes',
               secondaryModeActive: true,
-              secondaryLives: 2,
-              round: 3
+              secondaryLives: 2
             });
-
+ 
             setTimeout(() => {
-              get().startRound();
+              set({
+                phase: 'presentation',
+                input: [],
+                presentationEndTime: null,
+                inputTimestamps: [],
+              });
             }, 2000);
           } else if (secondaryLives > 1) {
             // Try again in secondary modality
@@ -253,9 +257,14 @@ export const useGameStore = create<GameState>()(
               runMetrics: newRunMetrics,
               secondaryLives: secondaryLives - 1
             });
-
+ 
             setTimeout(() => {
-              get().startRound();
+              set({
+                phase: 'presentation',
+                input: [],
+                presentationEndTime: null,
+                inputTimestamps: [],
+              });
             }, 2000);
           } else {
             // Final failure
